@@ -5,7 +5,11 @@ const transactionModel = require("../models/transactionModel");
  * update the recurring group for recurring group collection 
  */
 const insertTransaction = (newTransactions) => {
-
+    return new Promise((resolve, reject) => {
+        setTimeout(() => {
+            resolve({message: "some message"});
+        }, 1000*10);
+    });
 };
 
 /**

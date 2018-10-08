@@ -2,9 +2,13 @@ const zmq = require('zeromq');
 //connect to mongodb using mongoose
 const mongoose = require('mongoose');
 mongoose.connect('mongodb://localhost:27017/interview_challenge', {useNewUrlParser:true});
+
+const transctionService = require("./services/transactionService");
 // socket to talk to clients
 const responder = zmq.socket('rep');
 
+// console.log(responder);
+// listen for request
 responder.on('message', (request) => {
     console.log("Received request: [" + request.toString() + "]");
     let reqObject = JSON.parse(request.toString());
@@ -12,8 +16,11 @@ responder.on('message', (request) => {
     let timeout = true;
     switch(reqObject.task) {
         case "upsert_transactions":
-            responder.send(JSON.stringify({message: "This method is not implemented!"}));
-            timeout = false;
+            transctionService.insertTransaction({}).then((result) => {
+                timeout = false;
+            }, (err) => {
+
+            })
             break;
         case "get_recurring_trans":
             responder.send(JSON.stringify({message: "This method is not implemented!"}));
@@ -25,9 +32,9 @@ responder.on('message', (request) => {
     }
     setTimeout(() => {
         if (timeout) {
-            responder.send("API call timeout after 10 sec....");
+            responder.send(JSON.stringify({message: "Request call timeout after 10 sec...."}));
         } else {
-            console.log("-->Valid response has been sent!");
+            console.log("Valid response has been send");
         }
     }, 1000*10);
 });
@@ -42,4 +49,5 @@ responder.bind("tcp://*:1984", (err) => {
 
 process.on("SIGINT", () => {
     responder.close();
+    process.exit();
 });
