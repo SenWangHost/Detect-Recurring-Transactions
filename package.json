@@ -1,0 +1,23 @@
+{
+  "name": "code-challenge",
+  "version": "1.0.0",
+  "description": "Code challenge for detecting recurring transactions",
+  "main": "app.js",
+  "scripts": {
+    "test": "node test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SenWangHost/Detect-Recurring-Transactions.git"
+  },
+  "author": "Sen Wang",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SenWangHost/Detect-Recurring-Transactions/issues"
+  },
+  "homepage": "https://github.com/SenWangHost/Detect-Recurring-Transactions#readme",
+  "dependencies": {
+    "mongoose": "^5.3.2",
+    "zeromq": "^5.0.0"
+  }
+}
