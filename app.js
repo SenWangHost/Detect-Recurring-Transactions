@@ -7,11 +7,22 @@ const responder = zmq.socket('rep');
 
 responder.on('message', (request) => {
     console.log("Received request: [" + request.toString() + "]");
-    // // use only for test
-    // setTimeout(() => {
-    //     responder.send("World");
-    // }, 1000);
-    let timeout = false;
+    let reqObject = JSON.parse(request.toString());
+    console.log(reqObject);
+    let timeout = true;
+    switch(reqObject.task) {
+        case "upsert_transactions":
+            responder.send(JSON.stringify({message: "This method is not implemented!"}));
+            timeout = false;
+            break;
+        case "get_recurring_trans":
+            responder.send(JSON.stringify({message: "This method is not implemented!"}));
+            timeout = false;
+            break;
+        default:
+            responder.send(JSON.stringify({message: "Task name is not recognized!"}));
+            timeout = false;
+    }
     setTimeout(() => {
         if (timeout) {
             responder.send("API call timeout after 10 sec....");

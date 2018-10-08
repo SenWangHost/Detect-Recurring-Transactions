@@ -9,12 +9,14 @@ const requester = zmq.socket('req');
 
 requester.on("message", (reply) => {
     console.log("Received reply: [" + reply.toString() + "]");
+    console.log(JSON.parse(reply.toString()));
 });
 
 requester.connect("tcp://localhost:1984");
 
 // for basic test
-requester.send("Hello");
+let reqObj = {task: "upsert_transactions"};
+requester.send(JSON.stringify(reqObj));
 
 process.on("SIGINT", () => {
     requester.close();
