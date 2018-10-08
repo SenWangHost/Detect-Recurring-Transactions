@@ -4,7 +4,7 @@
 const zmq = require("zeromq");
 
 // socket to talk to server
-console.log("Starting the test clinet…");
+console.log("Starting the test client…");
 const requester = zmq.socket('req');
 
 requester.on("message", (reply) => {

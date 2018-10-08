@@ -7,10 +7,18 @@ const responder = zmq.socket('rep');
 
 responder.on('message', (request) => {
     console.log("Received request: [" + request.toString() + "]");
-    // use only for test
+    // // use only for test
+    // setTimeout(() => {
+    //     responder.send("World");
+    // }, 1000);
+    let timeout = false;
     setTimeout(() => {
-        responder.send("World");
-    }, 1000);
+        if (timeout) {
+            responder.send("API call timeout after 10 sec....");
+        } else {
+            console.log("-->Valid response has been sent!");
+        }
+    }, 1000*10);
 });
 
 responder.bind("tcp://*:1984", (err) => {
