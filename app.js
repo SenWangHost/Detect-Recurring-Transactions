@@ -1,4 +1,7 @@
 const zmq = require('zeromq');
+//connect to mongodb using mongoose
+const mongoose = require('mongoose');
+mongoose.connect('mongodb://localhost:27017/interview_challenge', {useNewUrlParser:true});
 // socket to talk to clients
 const responder = zmq.socket('rep');
 
