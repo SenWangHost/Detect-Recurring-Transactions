@@ -6,9 +6,21 @@ const transactionModel = require("../models/transactionModel");
  */
 const insertTransaction = (newTransactions) => {
     return new Promise((resolve, reject) => {
-        setTimeout(() => {
-            resolve({message: "some message"});
-        }, 1000*10);
+        // save each transaction into the transaction model
+        newTransactions.forEach((transaction) => {
+            transactionModel.findOne({trans_id: transaction.trans_id, user_id: transaction.user_id}, (err, result) => {
+                if (err) {
+                    reject({error: "Error in connecting with database!"});
+                } else if (result) {
+                    reject({error: "Transaction data already exists!"});
+                } else {
+                    // save to the database
+                    let curr = transactionModel(transaction);
+                    curr.save();
+                }
+            });
+        });
+        resolve({message: "Transactions added successfully!"});
     });
 };
 

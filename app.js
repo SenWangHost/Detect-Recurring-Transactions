@@ -16,23 +16,32 @@ responder.on('message', (request) => {
     let timeout = true;
     switch(reqObject.task) {
         case "upsert_transactions":
-            transctionService.insertTransaction({}).then((result) => {
-                timeout = false;
-            }, (err) => {
-
-            })
+            // valid the input transaction format
+            if (reqObject.transactions && Array.isArray(reqObject.transactions)) {
+                // convert the input transaction format into the schema format
+                let transactions = reqObject.transactions;
+                transactions.forEach((trans) => {convertTransaction(trans)});
+                transctionService.insertTransaction(transactions).then((result) => {
+                    responder.send(JSON.stringify(result));
+                }, (err) => {
+                    responder.send(JSON.stringify(err));
+                })
+            } else {
+                responder.send(JSON.stringify({error: "Invalid input format for transactions!"}));
+            }
+            timeout = false;
             break;
         case "get_recurring_trans":
-            responder.send(JSON.stringify({message: "This method is not implemented!"}));
+            responder.send(JSON.stringify({error: "This method is not implemented!"}));
             timeout = false;
             break;
         default:
-            responder.send(JSON.stringify({message: "Task name is not recognized!"}));
+            responder.send(JSON.stringify({error: "Task name is not recognized!"}));
             timeout = false;
     }
     setTimeout(() => {
         if (timeout) {
-            responder.send(JSON.stringify({message: "Request call timeout after 10 sec...."}));
+            responder.send(JSON.stringify({error: "Request call timeout after 10 sec...."}));
         } else {
             console.log("Valid response has been send");
         }
@@ -51,3 +60,15 @@ process.on("SIGINT", () => {
     responder.close();
     process.exit();
 });
+
+/**
+ * helper method
+ */
+function convertTransaction(trans) {
+    trans.date = new Date(trans.date);
+    // console.log(typeof trans.date);
+    trans.year = trans.date.getFullYear();
+    trans.month = trans.date.getMonth() + 1;
+    trans.day = trans.date.getUTCDate();
+    trans.general_name = trans.name.replace(/[0-9]/g, "").trim();
+};

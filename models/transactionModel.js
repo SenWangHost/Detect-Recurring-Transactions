@@ -8,7 +8,7 @@ const transactionSchema = mongoose.Schema({
     year: Number,
     month: Number,
     day: Number,
-    is_recurring: Boolean
+    general_name: String
 });
 
 const transactionModel = mongoose.model("transactions", transactionSchema);
