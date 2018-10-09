@@ -20,6 +20,8 @@ const insertTransaction = (newTransactions) => {
                 }
             });
         });
+        // update the recurring_groups
+        
         resolve({message: "Transactions added successfully!"});
     });
 };
