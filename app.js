@@ -21,6 +21,10 @@ responder.on('message', (request) => {
                 // convert the input transaction format into the schema format
                 let transactions = reqObject.transactions;
                 transactions.forEach((trans) => {convertTransaction(trans)});
+                // also sort the transaction according to the date
+                transactions.sort((t1, t2) => {
+                    return t1.date - t2.date;
+                });
                 transctionService.insertTransaction(transactions).then((result) => {
                     responder.send(JSON.stringify(result));
                 }, (err) => {
@@ -66,9 +70,14 @@ process.on("SIGINT", () => {
  */
 function convertTransaction(trans) {
     trans.date = new Date(trans.date);
+    trans.is_recurring = false;
     // console.log(typeof trans.date);
-    trans.year = trans.date.getFullYear();
-    trans.month = trans.date.getMonth() + 1;
-    trans.day = trans.date.getUTCDate();
-    trans.general_name = trans.name.replace(/[0-9]/g, "").trim();
+    let array = trans.name.split(/\s+/);
+    let last = array[array.length - 1];
+    if (/\d+/.test(last)) {
+        array = array.slice(0, array.length - 1);
+        trans.general_name = array.join(' ');
+    } else {
+        trans.general_name = trans.name;
+    }
 };
