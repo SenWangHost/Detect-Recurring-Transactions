@@ -1,93 +1,111 @@
+const math = require("mathjs");
+
 const transactionModel = require("../models/transactionModel");
 const recurringGroupModel = require("../models/recurringGroupModel");
 
 /**
- * insert array of new transactions into the transaction collection
- * update the recurring group for recurring group collection 
+ * save all the transctions to the transactions collection
  */
-const insertTransaction = (newTransactions) => {
+const insertTransactions = (newTransactions) => {
     return new Promise((resolve, reject) => {
-        // update the recurring group based on the new transaction data
+        let groupMap = new Map();
         newTransactions.forEach((trans) => {
-            recurringGroupModel.findOne({general_name: trans.general_name, user_id: trans.user_id}, (err, group) => {
+            // save every transaction into the database ===> asynchronously
+            transactionModel.findOne({trans_id: trans.trans_id, user_id: trans.user_id}, (err, result) => {
                 if (err) {
-                    reject({error: "Error in interacting with database!"});
-                } else if (group) {
-                    // add the transaction to the group
-                    group.all_transactions.push(trans);
-                    // recurring group exist, update the recurring group
-                    let length = group.all_transactions.length;
-                    // the total data point of group needs to be at least 3
-                    // for calculation of std
-                    if (length >= 3) {
-                        let intervals = get_intervals(group.all_transactions);
-                        let intervals_std = get_intervals_std(intervals);
-                        let amount_std = get_amount_std(group.all_transactions);
-                        // if both std meets the criteria, set them as recurring
-                        // for this group and each transaction
-                        if (intervals_std <= 10.0 && amount_std <= 100.0) {
-                            // set each transaction as recurring, also update 
-                            // transactions collections
-                            group.all_transactions.forEach((trans) => {
-                                trans.is_recurring = true;
-                                transactionModel.findOne({trans_id: trans.trans_id, user_id: trans.user_id}, (err, result) => {
-                                    if (err) {
-                                        reject({error: "Error in interacting with database!"});
-                                    } else if (result) {
-                                        result.set({is_recurring: true});
-                                        result.save();
-                                    } else {
-                                        trans.is_recurring = true;
-                                        const temp = new transactionModel(trans);
-                                        temp.save();
-                                    }
-                                });
-                            });
-                            // set this group to have recurring transactions and
-                            // update the field
-                            group.has_recurring = true;
-                            group.name = trans.name;
-                            group.next_amount = get_average_amount(group.all_transactions);
-                            group.average_interval = get_intervals_average(intervals);
-                            group.interval_std = intervals_std;
-                            group.amount_std = amount_std;
-                            let most_recent = group.all_transactions[length - 1];
-                            group.next_date = new Date(most_recent.date.getTime() + average_interval * 1000 * 3600 * 24);
-                            group.transactions = group.all_transactions.slice();
-                            group.non_recurring_count = 0;
-
-                        } else {
-                            group.non_recurring_count += 1;
-                        }
-                    } else {
-                        group.non_recurring_count += 1;
-                    }
-                    group.save();
+                    reject({error: "Error in saving transactions!"});
+                } else if (result) {
+                    reject({error: "Duplicate transaction detected!"});
                 } else {
-                    // create a new recurring group for this user-general_name pair
-                    new_recurrring_group = {
-                        name: trans.name,
-                        general_name: trans.general_name,
-                        user_id: trans.user_id,
-                        next_amount: trans.amount,
-                        next_date: null,
-                        average_interval: -1.0,
-                        interval_std: -1.0,
-                        amount_std: 0.0,
-                        non_recurring_count: 1,
-                        all_transactions: [trans],
-                        transactions: [],
-                        has_recurring: false
-                    };
-                    const rGroup = new recurringGroupModel(new_recurrring_group);
-                    rGroup.save();
-                    const newTrans = new transactionModel(trans);
-                    newTrans.save();
+                    let curr = new transactionModel(trans);
+                    curr.save();
                 }
             });
+            // group the transactions by general_name and user_id
+            let key = trans.general_name + "-" + trans.user_id;
+            if (!groupMap.has(key)) {
+                groupMap.set(key, []);
+            }
+            groupMap.get(key).push(trans);
         });
-        
-        resolve({message: "update recurring group successfully"});
+        let promises = [];
+        // update each recurring group
+        for (let [key, value] of groupMap) {
+            let array = key.split('-');
+            let g_name = array[0];
+            let u_id = array[1];
+            console.log(g_name + "--" + u_id);
+            console.log(value);
+            promises.push(updateRecurringGroup(g_name, u_id, value));
+        }
+        // executing all asynchronous call before getting the reuslt
+        Promise.all(promises).then((values) => {
+            resolve(values);
+        }).catch((err) => {
+            reject(err);
+        });
+    });
+};
+
+const updateRecurringGroup = (g_name, u_id, transactions) => {
+    return new Promise((resolve, reject) => {
+        recurringGroupModel.findOne({general_name: g_name, user_id: u_id}, (err, group) => {
+            if (err) {
+                reject({error: "Error in finding recurring group!"}); 
+            } else {
+                if (!group) {
+                    console.log("-->Create new recurring group!");
+                    let new_recurring_group = {
+                        name: '',
+                        general_name: g_name,
+                        user_id: u_id,
+                        next_amount: 0,
+                        next_date: null,
+                        average_interval: 0.0,
+                        interval_std: 0.0,
+                        amount_std: 0.0,
+                        transactions: [],
+                        is_recurring: false
+                    };
+                    group = new recurringGroupModel(new_recurring_group);
+                }
+                console.log("Update recurring group!");
+                transactions = transactions.concat(group.transactions);
+                transactions.sort((a, b) => {return a.date - b.date});
+                let length = transactions.length;
+                let most_recent = transactions[length - 1];
+                group.transactions = transactions;
+                console.log("length: " + length);
+                if (length >= 3) {
+                    let intervals = get_intervals(transactions);
+                    let intervals_std = get_intervals_std(intervals);
+                    let intervals_ave = get_intervals_average(intervals);
+                    let amount_std = get_amount_std(transactions);
+                    let amount_ave = get_average_amount(transactions);
+                    console.log("---------");
+                    console.log(intervals);
+                    console.log("intervals_std = " + intervals_std);
+                    console.log("amount_std = " + amount_std);
+                    console.log("---------");
+                    // if both std meets the criteria, set them as recurring
+                    // for this group and each transaction
+                    if (intervals_std <= 10.0 && amount_std <= 100.0) {
+                        // update this group as recurring group
+                        console.log("is recurring group!");
+                        group.name = most_recent.name;
+                        group.next_amount = amount_ave;
+                        console.log(most_recent.date);
+                        group.next_date = new Date(most_recent.date.getTime() + intervals_ave * 1000 * 3600 * 24);
+                        group.average_interval = intervals_ave;
+                        group.interval_std = intervals_std;
+                        group.amount_std = amount_std;
+                        group.is_recurring = true;
+                    }
+                }
+                group.save();
+                resolve(group);
+            }
+        });
     });
 };
 
@@ -130,10 +148,9 @@ const get_average_amount = (transactions) => {
 const get_intervals = (transactions) => {
     let intervals = [];
     for (let i = 1; i < transactions.length; i++) {
-        let interval = (transactions[i].date.getTime() - transactions[i].date.getTime()) / (1000 * 3600 * 24);
+        let interval = (transactions[i].date.getTime() - transactions[i - 1].date.getTime()) / (1000 * 3600 * 24);
         intervals.push(interval);
     }
-    console.log(intervals);
     return intervals;
 };
 
@@ -159,13 +176,15 @@ const get_intervals_std = (intervals) => {
  */
 const get_amount_std = (transactions) => {
     let amounts = [];
-    transactions.forEach((trans) => {amounts.push(math.abs(trans.amount))});
+    for (let trans of transactions) {
+        amounts.push(trans.amount);
+    }
     return math.std(amounts);
 };
 
 
 module.exports = {
-    insertTransaction: insertTransaction,
+    insertTransactions: insertTransactions,
     getRecurringGroupsByUser: getRecurringGroupsByUser,
     getAllRecurringGroups: getAllRecurringGroups
 };

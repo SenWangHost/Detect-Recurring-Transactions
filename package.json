@@ -18,6 +18,7 @@
   },
   "homepage": "https://github.com/SenWangHost/Detect-Recurring-Transactions#readme",
   "dependencies": {
+    "async": "^2.6.1",
     "mathjs": "^5.2.0",
     "mongoose": "^5.3.2",
     "zeromq": "^5.0.0"

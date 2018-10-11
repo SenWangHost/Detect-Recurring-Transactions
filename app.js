@@ -12,7 +12,7 @@ const responder = zmq.socket('rep');
 responder.on('message', (request) => {
     console.log("Received request: [" + request.toString() + "]");
     let reqObject = JSON.parse(request.toString());
-    console.log(reqObject);
+    // console.log(reqObject);
     let timeout = true;
     switch(reqObject.task) {
         case "upsert_transactions":
@@ -21,15 +21,12 @@ responder.on('message', (request) => {
                 // convert the input transaction format into the schema format
                 let transactions = reqObject.transactions;
                 transactions.forEach((trans) => {convertTransaction(trans)});
-                // also sort the transaction according to the date
-                transactions.sort((t1, t2) => {
-                    return t1.date - t2.date;
-                });
-                transctionService.insertTransaction(transactions).then((result) => {
+                transctionService.insertTransactions(transactions).then((result) => {
+                    console.log(result);
                     responder.send(JSON.stringify(result));
                 }, (err) => {
                     responder.send(JSON.stringify(err));
-                })
+                });
             } else {
                 responder.send(JSON.stringify({error: "Invalid input format for transactions!"}));
             }

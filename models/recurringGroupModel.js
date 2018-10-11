@@ -18,11 +18,9 @@ const recurringGroupSchema = mongoose.Schema({
     average_interval: Number,
     interval_std: Number,
     amount_std: Number,
-    non_recurring_count: Number,
-    all_transactions: [transactionSchema],
     transactions: [transactionSchema],
-    has_recurring: Boolean
+    is_recurring: Boolean
 });
 
 const recurringGroupModel = mongoose.model("recurring_groups", recurringGroupSchema);
-module.export = recurringGroupModel;
+module.exports = recurringGroupModel;

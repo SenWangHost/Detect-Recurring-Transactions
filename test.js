@@ -16,14 +16,6 @@ requester.connect("tcp://localhost:1984");
 
 // for basic test
 let transaction1 = {
-    trans_id: '42',
-    user_id: '1',
-    name: 'YMCA',
-    amount: 69,
-    date: new Date('2018-08-10T08:00:00.000Z')
-};
-  
-let transaction2 = {
     trans_id: '1',
     user_id: '1',
     name: 'Comcast',
@@ -31,15 +23,31 @@ let transaction2 = {
     date: new Date('2018-08-08T07:00:00.000Z')
 };
   
-let transaction3 = {
-    trans_id: '30',
+let transaction2 = {
+    trans_id: '6',
     user_id: '1',
-    name: 'PAYROLL 180307',
-    amount: -930.82,
-    date: new Date('2018-08-07T08:00:00.000Z')
+    name: 'Comcast',
+    amount: 66.41,
+    date: new Date('2018-07-09T07:00:00.000Z')
+};
+  
+let transaction3 = {
+    trans_id: '11',
+    user_id: '1',
+    name: 'Comcast',
+    amount: 66.41,
+    date: new Date('2018-06-08T07:00:00.000Z')
 };
 
-let reqObj = {task: "upsert_transactions", transactions: [transaction1, transaction2, transaction3]};
+let transaction4 = {
+    trans_id: '19',
+    user_id: '1',
+    name: 'Comcast',
+    amount: 63.25,
+    date: new Date('2018-05-08T07:00:00.000Z')
+};
+
+let reqObj = {task: "upsert_transactions", transactions: [transaction1, transaction2, transaction3, transaction4]};
 requester.send(JSON.stringify(reqObj));
 
 process.on("SIGINT", () => {
