@@ -23,6 +23,9 @@ responder.on('message', (request) => {
                 transactions.forEach((trans) => {convertTransaction(trans)});
                 transctionService.insertTransactions(transactions).then((result) => {
                     console.log(result);
+                    for (let i = 0; i < result.length; i++) {
+                        result[i] = clean_group(result[i]);
+                    }
                     responder.send(JSON.stringify(result));
                     timeout = false;
                 }, (err) => {

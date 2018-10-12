@@ -40,7 +40,13 @@ const insertTransactions = (newTransactions) => {
         }
         // executing all asynchronous call before getting the reuslt
         Promise.all(promises).then((values) => {
-            resolve(values);
+            let result = [];
+            for (let value of values) {
+                if (value.is_recurring) {
+                    result.push(value);
+                }
+            }
+            resolve(result);
         }).catch((err) => {
             reject(err);
         });
