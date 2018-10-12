@@ -3,6 +3,7 @@
 ZeroMQ
 mongoDB
 mongoose as ODM
+mathjs for some simple statistics calculations
 
 ## criteria for identifying the recurring group
 1. the group needs to have at least 3 data points
