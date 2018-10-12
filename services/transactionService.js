@@ -120,7 +120,15 @@ const getRecurringGroupsByUser = (user_id) => {
  * get all recurring groups
  */
 const getAllRecurringGroups = () => {
-
+    return new Promise((resolve, reject) => {
+        recurringGroupModel.find({}).sort({user_id: "ascending"}).exec((err, results) => {
+            if (err) {
+                reject({error: "Error in getting recurring groups!"});
+            } else {
+                resolve(results);
+            }
+        });
+    });
 };
 
 /**

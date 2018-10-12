@@ -48,7 +48,8 @@ let transaction4 = {
 };
 
 let reqObj = {task: "upsert_transactions", transactions: [transaction1, transaction2, transaction3, transaction4]};
-requester.send(JSON.stringify(reqObj));
+let reqObj2 = {task: "get_recurring_trans"};
+requester.send(JSON.stringify(reqObj2));
 
 process.on("SIGINT", () => {
     requester.close();
