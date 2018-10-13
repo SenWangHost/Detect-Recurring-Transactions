@@ -1,2 +1,4 @@
 node_modules
 mongodb_data
+.idea/*
+.idea/vcs.xml
